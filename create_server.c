@@ -30,14 +30,43 @@ int main() {
      * Hàm này sẽ phân giải Port "3490", đóng gói nó cùng với IP máy của bạn, và trả về một cấu trúc res hoàn chỉnh.
     */
 
-    // make a socket:
-
+    // tao socket va tra ve FD:
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-
-    // bind it to the port we passed in to getaddrinfo():
 
     bind(sockfd, res->ai_addr, res->ai_addrlen);
 
     //TODO: error handler
-    //TODO: free freeaddrinfo (neu khong khi chay lau ngay se tran RAM
+    //TODO: free freeaddrinfo (neu khong khi chay lau ngay se tran RAM)
+
+}
+
+
+// chi chap nhan connect o may local
+int local_connection() {
+
+    struct addrinfo hints, *res;
+    int sockfd;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;     // Tự động hỗ trợ cả IPv4 (127.0.0.1) và IPv6 (::1)
+    hints.ai_socktype = SOCK_STREAM; // Dùng TCP
+
+    // BƯỚC 1: Bỏ dòng hints.ai_flags = AI_PASSIVE;
+    // Vì AI_PASSIVE chỉ dùng khi bạn muốn lắng nghe trên mọi giao diện (0.0.0.0)
+
+    // BƯỚC 2: Truyền "localhost" (hoặc "127.0.0.1") thay vì truyền NULL
+    int status = getaddrinfo("localhost", "3490", &hints, &res);
+    if (status != 0) {
+        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        return 1;
+    }
+
+    // Tạo socket và bind như cũ
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    bind(sockfd, res->ai_addr, res->ai_addrlen);
+
+    // ĐỪNG QUÊN giải phóng bộ nhớ sau khi dùng xong res
+    freeaddrinfo(res);
+
+    return 0;
 }
